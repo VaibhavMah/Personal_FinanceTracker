@@ -13,7 +13,10 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({
-  origin: ["http://localhost:5173"], // frontend dev server
+  origin: [
+    "http://localhost:5173", // dev
+    "https://personal-finance-tracker-two-gamma.vercel.app" // vercel frontend
+  ],
   credentials: true,
 }));
 
