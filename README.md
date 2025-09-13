@@ -17,24 +17,32 @@ A full-stack MERN application to track personal finances (income, expenses, cate
    ```bash
    git clone https://github.com/VaibhavMah/Personal_FinanceTracker.git
    cd Personal_FinanceTracker
-2. cd backend
-npm install
+2.
+   ```bash
+   cd backend
+   npm install
 
-3 . cd ../frontend
-npm install
+3 . 
+   ```bash
+   cd ../frontend
+   npm install
 
-4. PORT=5000
-MONGO_URI=<your MongoDB Atlas URI>
-JWT_SECRET=<your secret key>
-EMAIL
-EMAIL_PASS
+4.
+```bash
+   PORT=5000
+   MONGO_URI=<your MongoDB Atlas URI>
+   JWT_SECRET=<your secret key>
+   EMAIL
+   EMAIL_PASS
 
-5 . RUN 
-cd backend
-npm run dev   # or npm start
+5 .
+ RUN
+```bash
+   cd backend
+   npm run dev   # or npm start
 
-cd frontend
-npm start
+   cd frontend
+   npm start
 
 
 
