@@ -19,7 +19,7 @@ export default function Navbar() {
         <div className="flex gap-6 items-center">
           {isLoggedIn ? (
             <>
-              <Link to="/" className="hover:underline">
+              <Link to="/dashboard" className="hover:underline">
                 Dashboard
               </Link>
               <Link to="/transactions" className="hover:underline">
