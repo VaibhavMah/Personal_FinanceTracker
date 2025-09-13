@@ -1,63 +1,52 @@
-const express = require("express");
-const router = express.Router();
+const { Router } = require("express");
 const Transaction = require("../models/Transactions");
 const authMiddleware = require("../middleware/authMiddleware");
 
-// Create a transaction (protected)
+const router = Router();
+
+// --------------------
+// CREATE
+// --------------------
 router.post("/", authMiddleware, async (req, res) => {
   try {
-    const { title, amount, date, category, notes } = req.body;
-
-    if (!title || amount === undefined || !category) {
-      return res.status(400).json({ message: "title, amount and category are required" });
-    }
+    const { title, amount, type, category, date, notes } = req.body;
 
     const tx = new Transaction({
       userId: req.user._id,
-      title: title.trim(),
-      amount: Number(amount),
-      date: date ? new Date(date) : new Date(),
-      category: category.trim(),
+      title,
+      amount,
+      type,       // now this comes from req.body
+      category,
+      date,
       notes,
     });
 
     await tx.save();
     res.status(201).json(tx);
   } catch (err) {
-    console.error("Create tx error:", err);
-    res.status(500).json({ message: "Could not create transaction" });
+    console.error("Add transaction error:", err);
+    res.status(500).json({ message: "Could not add transaction" });
   }
 });
 
-// Get all transactions for authenticated user (optionally filter / query)
+
+
+// --------------------
+// READ ALL (User's Transactions)
+// --------------------
 router.get("/", authMiddleware, async (req, res) => {
   try {
-    const { startDate, endDate, category, q, sortBy } = req.query;
-    const userId = req.user._id;
-
-    const filter = { userId };
-
-    if (category) filter.category = category;
-    if (startDate || endDate) {
-      filter.date = {};
-      if (startDate) filter.date.$gte = new Date(startDate);
-      if (endDate) filter.date.$lte = new Date(endDate);
-    }
-    if (q) filter.title = { $regex: String(q), $options: "i" };
-
-    let sort = { date: -1 };
-    if (sortBy === "amount_asc") sort = { amount: 1 };
-    if (sortBy === "amount_desc") sort = { amount: -1 };
-
-    const txs = await Transaction.find(filter).sort(sort).lean();
+    const txs = await Transaction.find({ userId: req.user._id }).sort({ date: -1 });
     res.json(txs);
   } catch (err) {
-    console.error("Fetch txs error:", err);
+    console.error("Fetch transactions error:", err);
     res.status(500).json({ message: "Could not fetch transactions" });
   }
 });
 
-// Get a single transaction by id (must belong to user)
+// --------------------
+// READ SINGLE
+// --------------------
 router.get("/:id", authMiddleware, async (req, res) => {
   try {
     const tx = await Transaction.findById(req.params.id);
@@ -67,27 +56,40 @@ router.get("/:id", authMiddleware, async (req, res) => {
     }
     res.json(tx);
   } catch (err) {
-    console.error("Get tx error:", err);
+    console.error("Get single tx error:", err);
     res.status(500).json({ message: "Could not fetch transaction" });
   }
 });
 
-// Update transaction (protected, owner only)
+// --------------------
+// UPDATE
+// --------------------
+// UPDATE
+// --------------------
 router.put("/:id", authMiddleware, async (req, res) => {
   try {
+    const { title, amount, type, date, category, notes } = req.body;
     const tx = await Transaction.findById(req.params.id);
+
     if (!tx) return res.status(404).json({ message: "Transaction not found" });
     if (tx.userId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    const { title, amount, date, category, notes } = req.body;
+    tx.title = title ?? tx.title;
 
-    if (title !== undefined) tx.title = title.trim();
-    if (amount !== undefined) tx.amount = Number(amount);
-    if (date !== undefined) tx.date = new Date(date);
-    if (category !== undefined) tx.category = category.trim();
-    if (notes !== undefined) tx.notes = notes;
+    if (amount !== undefined) {
+      if (type === "expense") {
+        tx.amount = -Math.abs(amount);
+      } else if (type === "income") {
+        tx.amount = Math.abs(amount);
+      }
+    }
+
+    tx.type = type ?? tx.type;
+    tx.date = date ?? tx.date;
+    tx.category = category ?? tx.category;
+    tx.notes = notes ?? tx.notes;
 
     await tx.save();
     res.json(tx);
@@ -97,23 +99,23 @@ router.put("/:id", authMiddleware, async (req, res) => {
   }
 });
 
-// Delete transaction (protected, owner only)
+// --------------------
+// DELETE
+// --------------------
 router.delete("/:id", authMiddleware, async (req, res) => {
   try {
     const tx = await Transaction.findById(req.params.id);
     if (!tx) return res.status(404).json({ message: "Transaction not found" });
-
     if (tx.userId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    await tx.deleteOne(); // ✅ correct way in Mongoose 6+
+    await Transaction.deleteOne({ _id: req.params.id });
     res.json({ message: "Transaction deleted" });
   } catch (err) {
     console.error("Delete tx error:", err);
     res.status(500).json({ message: "Could not delete transaction" });
   }
 });
-
 
 module.exports = router;
