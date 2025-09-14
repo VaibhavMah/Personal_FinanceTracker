@@ -6,6 +6,7 @@ import Message from "../components/Message";
 export default function VerifyOtp() {
   const [formData, setFormData] = useState({ email: "", otp: "" });
   const [message, setMessage] = useState(null);
+  const [loading, setLoading] = useState(false); // 👈 new state
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -14,6 +15,7 @@ export default function VerifyOtp() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true); // 👈 start loading
     try {
       const res = await api.post("/auth/verify-otp", formData);
       localStorage.setItem("token", res.data.token);
@@ -24,6 +26,8 @@ export default function VerifyOtp() {
         type: "error",
         text: err.response?.data?.message || "Verification failed",
       });
+    } finally {
+      setLoading(false); // 👈 stop loading
     }
   };
 
@@ -59,14 +63,20 @@ export default function VerifyOtp() {
 
           {/* Spam folder hint */}
           <p className="text-xs text-gray-500 -mt-2">
-            Didn’t receive the OTP? Check your <span className="font-semibold">Spam</span> folder.
+            Didn’t receive the OTP? Check your{" "}
+            <span className="font-semibold">Spam</span> folder.
           </p>
 
           <button
             type="submit"
-            className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
+            disabled={loading} // 👈 disable while loading
+            className={`w-full py-2 rounded text-white ${
+              loading
+                ? "bg-green-400 cursor-not-allowed"
+                : "bg-green-600 hover:bg-green-700"
+            }`}
           >
-            Verify
+            {loading ? "Verifying..." : "Verify"}
           </button>
         </form>
 
