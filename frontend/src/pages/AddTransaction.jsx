@@ -8,7 +8,7 @@ export default function AddTransactionPage() {
 
   const handleAdd = () => {
     // ✅ redirect to dashboard after successful add
-    navigate("/");
+    navigate("/dashboard");
   };
 
   return (
