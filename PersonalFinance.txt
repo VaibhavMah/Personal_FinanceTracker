@@ -1,0 +1,19 @@
+Personal Finance tracker
+/
+/add
+/:id/edit
+/:id/delete
+form to add/edit transactions , and edit's form will have all previously filled values just ability to edit anything except somethings
+list to view/delete transactions
+fields - title, amount(+/-),date, category
+
+authentication , localStorage, filters, charts, deploye links
+
+
+
+
+
+mongodb+srv://vaibmah933_db_user:xpJQwTUdFzjhbpXg@financetracker.dffawdg.mongodb.net/?retryWrites=true&w=majority&appName=FinanceTracker
+
+
+xpJQwTUdFzjhbpXg
