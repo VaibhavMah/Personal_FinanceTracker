@@ -23,11 +23,22 @@ router.post("/register", async (req, res) => {
     }
 
     const existing = await User.findOne({ email });
-    if (existing) return res.status(400).json({ message: "Email already used" });
+    if (existing && existing.isVerified) return res.status(400).json({ message: "Email already used" });
+    
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
+    await sendEmail(email, "Verify your account", `Your OTP is: ${otp}`);
+
+    if (existing && !existing.isVerified) {
+            existing.username = username;
+            existing.password = hashedPassword;
+            existing.otp = otp;
+            existing.otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+            await existing.save();
+    }
+    else{
     const user = new User({
       username,
       email,
@@ -35,9 +46,9 @@ router.post("/register", async (req, res) => {
       otp,
       otpExpiry: new Date(Date.now() + 10 * 60 * 1000),
     });
-
     await user.save();
-    await sendEmail(email, "Verify your account", `Your OTP is: ${otp}`);
+  }
+  
 
     res.status(201).json({ message: "User registered. Please verify your email." });
   } catch (err) {
